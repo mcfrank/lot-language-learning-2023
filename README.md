@@ -23,7 +23,7 @@ Additional useful tools: familiarity with github for version control and the [ti
 Before we start, please ensure you have installed a recent version of:
 
 - R and R Studio - follow instructions here: [https://posit.co/download/rstudio-desktop/]()
-- The tidyverse - write `install.packages("tidyverse")` in R once you have it installed
+- The tidyverse - write `install.packages("tidyverse")` in R once you have R and R studio installed
 
 If these are not working on your computer, you won't be able to do any of the in-class assignments, which will make up the bulk of the course.
 
