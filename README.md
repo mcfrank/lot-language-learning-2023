@@ -68,7 +68,7 @@ Goals:
 
 -   Learn about CHILDES and the CHAT format
 -   Discuss issues of frequency and frequency estimation from corpus data
--   Reproduce analyses of the development of disjunction from [Jasbi, Jaggi, Clark, & Frank (2022)](https://www.cambridge.org/core/journals/journal-of-child-language/article/abs/contextdependent-learning-of-linguistic-disjunction/D88F848F43230EE00A6474E4400A75AF). [[github repo](https://github.com/jasbi/disjunction_learning)]
+-   Reproduce analyses of the development of disjunction from [Jasbi, Jaggi, Clark, & Frank (2022)](https://www.cambridge.org/core/journals/journal-of-child-language/article/abs/contextdependent-learning-of-linguistic-disjunction/D88F848F43230EE00A6474E4400A75AF). 
 
 ### Day 4: Exploring online processing using Peekbank
 
@@ -91,12 +91,12 @@ We will devote five minutes at the end of class to talking about the group proje
 
 On the final day of the course, we will primarily be doing group projects. The goal of a group project is to work together to develop some of the ideas we have discussed. 
 
-Groups will be 2--3 people (more makes it impossible to code together all looking at the same screen). 
+Groups will be 2 - 3 people (more makes it impossible to code together all looking at the same screen). 
 
 You are encouraged to come up with your own project idea, and I am happy to talk with students about how to use these resources to explore your own interests. Here are a few "starter ideas":
 
 - Explore effects of maternal education on vocabulary growth (Wordbank)
-– Characterize the developmental trajectory of children's lexical diversity (e.g., MTLD) and how it differs by gender (CHILDES)
-– Estimate the frequencies of color terms (or some other interesting set of words) in speech to children over age (CHILDES)
+- Characterize the developmental trajectory of children's lexical diversity (e.g., MTLD) and how it differs by gender (CHILDES)
+- Estimate the frequencies of color terms (or some other interesting set of words) in speech to children over age (CHILDES)
 - Explore cross-linguistic linkages between CHILDES frequency and learning outcomes in either Wordbank or Peekbank
 
