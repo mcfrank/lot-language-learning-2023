@@ -1,0 +1,202 @@
+---
+title: 'Day 2: Digging into Wordbank'
+author: "Mike Frank"
+date: "2023-01-10"
+output: html_document
+---
+
+In this Markdown, we'll dig into data from Wordbank! To retrieve data, you'll need to use the `wordbankr` package, which you can install using the `remotes` package, which in turn is available from CRAN. 
+
+```{r eval=FALSE}
+# run this only once to install wordbankr
+install.packages("remotes")
+remotes::install_github("langcog/wordbankr")
+```
+Now we're going to use `wordbankr` and `tidyverse` in our analysis. 
+
+```{r}
+library(tidyverse)
+library(wordbankr)
+```
+
+
+# What's in `wordbankr`?
+
+The first thing we can do is look into what is available in the package. 
+
+```{r}
+ls("package:wordbankr")
+```
+In practice, almost all the functions in `wordbankr` (and `childesr` and `peekbankr`) simply function to retrieve data from the database, table by table. All of these functions have names like `get_X_data` where X is the name of the relevant table. 
+
+Let's take a look at the `instruments` table that tells us about the different MB-CDI variants in Wordbank. 
+
+```{r}
+intruments <- get_instruments()
+intruments
+```
+
+Here you can see all the different languages and instruments. That can help us figure out which data we can get. 
+
+The next main data types we might want from Wordbank are `administration_data` and `instrument_data`. Administration data is about individual instances is a time a form was filled out for a particular child (each row is a child). Instrument data is every response for every item on the form - this kind of data is much bigger and can be tricky to work with. 
+
+Let's start by recreating our analysis from yesterday, now pulling data live from Wordbank. 
+
+```{r}
+admins_eng_ws <- get_administration_data(language = "English (American)", form = "WS")
+head(admins_eng_ws)
+n_distinct(admins_eng_ws$data_id)
+```
+
+We can look at the distribution across ages using the `count` verb:
+
+```{r}
+admins_eng_ws |> 
+  count(age)
+```
+
+EXERCISE: Try choosing another instrument in a different language and pulling data from it, then examining the age distribution.
+
+```{r}
+# ...
+```
+
+# Visualizing Wordbank data
+
+Now we can make our canonical plot of the variability of individual children's vocabularies. Note that we are using `geom_jitter`, which jitters points around so they don't all end up on top of one another. The arguments to the function (`alpha` and `size`) make the points smaller and semi-transparent, so they all can be seen on one plot. 
+
+```{r}
+ggplot(admins_eng_ws, aes(x = age, y = production)) +
+  geom_jitter(alpha = .1, size = 0.5, width = .3, height = 0) +
+  geom_smooth()
+```
+
+
+EXERCISE: let's redo our analysis from yesterday but using data straight from wordbank. Group the data by age and sex, summarise the mean, and plot the result!
+
+Hint: start by pasting the code from yesterday.
+
+```{r}
+# ...
+```
+
+# Digging into item-level data
+
+The exciting part of Wordbank is that you can dig into kids' data for individual words! The list of words for each instrument is stored in the `item_data` table, and the responses for each item for each kid (the "rawest" form of the data) is stored in the `instrument_data` table. 
+
+We'll start by looking at the English items. 
+
+```{r}
+items_eng_ws <- get_item_data(language = "English (American)", form = "WS")
+head(items_eng_ws)
+```
+
+Note that there are different kinds of items on CDI forms. There's the word list, but there are also items about how children use words, verbal and nominal morphology, word combination (whether children are combining) and items on morphysyntactic complexity of utterances. 
+
+```{r}
+items_eng_ws |> distinct(item_kind)
+```
+What's more, within the words, there are a whole bunch of different categories of word (marked this way on the form to make it easier for parents to think about different words). 
+
+```{r, rows.print=25}
+items_eng_ws |> filter(item_kind == "word") |> distinct(category)
+```
+
+There are also some "protosyntactic" categories, created following Bates et al. (1994), who further grouped the categories above into nouns, predicates (verbs and adjectives), function words, and others. 
+
+```{r}
+items_eng_ws |> filter(item_kind == "word") |> distinct(lexical_category)
+```
+
+Note that all of this sectioning is specific to the English forms. Most other forms follow most of these decisions, but there are many significant deviations from them based on what various form developers wanted at the time and/or felt was appropriate for their language. 
+
+# Getting raw instrument data
+
+OK, we are now ready to get raw instrument data. 
+
+The main issue with doing this is that the raw data are very large. So we won't want to pull every item. Let's try selecting the items "dog" and "cat"!
+
+
+```{r}
+dog_cat_items <- items_eng_ws |> filter(item_definition %in% c("dog", "cat"))
+dog_cat_data <- get_instrument_data(language = "English (American)", 
+                                    form = "WS", 
+                                    items = dog_cat_items$item_id, 
+                                    item_info = TRUE)
+head(dog_cat_data)
+```
+
+Now we can aggregate and plot these data. (We'll have to join in the children's ages). Check out this slightly more complex pipe chain where we do a join, and then a group and then a summarise!
+
+```{r}
+dog_cat_means <- dog_cat_data |>
+  left_join(admins_eng_ws) |>
+  group_by(age, item_definition) |>
+  summarise(produces = mean(produces, na.rm=TRUE))
+
+ggplot(dog_cat_means, aes(x = age, y = produces, col = item_definition)) +
+  geom_point() + 
+  geom_smooth() 
+```
+
+
+# Replicating Bates & Goodman (1997)
+
+Now we have everything we need to replicate Bates and Goodman's observed correlation between grammar and the lexicon. 
+
+First, get the complexity items. 
+
+```{r}
+complexity_items <- filter(items_eng_ws, item_kind == "complexity") 
+head(complexity_items)
+```
+Next get the instrument data for these specific items (note that we are using `item_id` to select only the complexity items), for all children. This is a lot of data! 
+
+```{r}
+complexity_instrument_data <- get_instrument_data(language = "English (American)", 
+                                                  form = "WS", 
+                                                  items = complexity_items$item_id)
+head(complexity_instrument_data)                                          
+```
+
+For each item, parents checked whether the child's response was more like the `simple` or `complex` model sentence. 
+
+EXERCISE: average the complexity data for each individual so that you have one number (`complexity_score`) for each child, with that number indicating the number of items on which the parent indicated `complex`. 
+
+Hint: try using `sum(value == "complex")` to add them up. 
+
+Hint: `data_id` indicates a unique child.
+
+```{r}
+# complete this pipe chain:
+# complexity_means <- complexity_instrument_data |>
+#   ...
+```
+
+EXERCISE: now join `complexity_means` and `admins_eng_ws` to create a single dataframe.
+
+```{r}
+# complete this command:
+# admins_eng_ws <- ...
+```
+
+Now we can plot the relationship described by Bates and Goodman!
+
+```{r}
+ggplot(admins_eng_ws, aes(x = production, y = complexity_score)) + 
+  geom_jitter(alpha = .1, size = .5, width = 0, height = .3) + 
+  geom_smooth()
+```
+We can even quantify the strength of this relationship statistically!
+
+```{r}
+cor.test(admins_eng_ws$production, admins_eng_ws$complexity_score)
+```
+
+# Challenge problem
+
+If you had no trouble doing the prior two exercises, try making the same figure as above, but this time compare to the total productive PREDICATE vocabulary, NOT the total vocabulary. 
+
+To do this, you will need to pull the instrument data for predicates and create the same kind of child-level score dataframe you did for complexity, with a variable called `predicate_score`. Let's see what you get!
+
+

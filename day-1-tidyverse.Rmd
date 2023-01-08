@@ -17,12 +17,13 @@ This is a quick tidyverse introduction/refresher, adapted for the LOT Language L
 - the barest bit of visualization using `ggplot`, and 
 - joining tidy data frames.
 
-I assume as a prerequisite that you already have some familiarity with R and am really just giving a refresher so everyone is on the same page. The best reference for this material is Hadley Wickham's [R for data scientists](http://r4ds.had.co.nz/) and I encourage you to read it if you are interested in learning more. 
+I assume that you already have some familiarity with R. The best reference for this material is Hadley Wickham's [R for data scientists](http://r4ds.had.co.nz/) and I encourage you to read it if you are interested in learning more. 
 
 # Tidy data
 
 The basic data structure we're working with is the data frame, or `tibble` (in the `tidyverse` reimplementation). 
-Data frames have rows and columns, and each column has a distinct data type. The implementation in Python's `pandas` is distinct but most of the concepts are the same. 
+
+Data frames have rows and columns, and each column has a distinct data type. The implementation in Python's `pandas` is distinct but most of the concepts are the same. Tidy dataframes are a subset of data frames.
 
 > “Tidy datasets are all alike, but every messy dataset is messy in its own way.” –– Hadley Wickham
 
@@ -34,9 +35,9 @@ And if you know that data are formatted this way, then you can do amazing things
 
 # Our dataset
 
-In this tutorial, we'll be using data from the English administrations of the MacArthur-Bates Communicative Develoment Inventory, as pulled from Wordbank. These are vocabulary checklist data from the "Words and Sentences" instrument, in which parents are asked 680 questions about the words their child produces. Right now we'll start with the summary data containing the number of words the parent checked, which gives us an esimate of the child's productive vocabulary. 
+In this tutorial, we'll be using data from the English administrations of the MacArthur-Bates Communicative Development Inventory, as pulled from Wordbank. These are vocabulary checklist data from the "Words and Sentences" instrument, in which parents are asked 680 questions about the words their child produces. Right now we'll start with the summary data containing the number of words the parent checked, which gives us an estimate of the child's productive vocabulary. 
 
-Let's read in the data using the tidyverse `read_csv` command. 
+Let's read in the data using the tidyverse `read_csv` command. (This is an old cached version of the data, we'll use the full dataset tomorrow). 
 
 ```{r}
 eng_ws <- read_csv("data/eng_ws_data.csv")
@@ -74,7 +75,7 @@ eng_ws$production |>
   round()
 ```
 
-This reodering is easier to read out as a series of successive actions on data: "take `eng_ws$production`, take the mean, and then round it."
+This re-ordering is easier to read out as a series of successive actions on data: "take `eng_ws$production`, take the mean, and then round it."
 
 You try it! 
 
@@ -121,7 +122,7 @@ Also notice that within dplyr verbs, you don't have to do that clunky `eng_ws$ag
 
 ## `mutate`
 
-Perhaps more useful is *adding columns*. You might do this perhaps to compute some kind of derived variable. `mutate` is the verb for these situations - it allows you to add a column. Let's add an age group variable. 
+`mutate` is a useful verb that helps you in *adding columns*. You might do this perhaps to compute some kind of derived variable. `mutate` is the verb for these situations - it allows you to add a column. Let's add an age group variable. 
 
 ```{r}
 eng_ws |>

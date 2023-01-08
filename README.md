@@ -47,8 +47,8 @@ Agenda:
 
 Readings:
 
--   [Bates et al. (1994), "Developmental and stylistic variation"](https://web.stanford.edu/group/langlearninglab/cgi-bin/publications/Bates,%20Marchman,%20Thal,%20et%20al%201994.pdf)
--   Frank et al. (2021), Chapters 11 and 13, ["Vocabulary composition"](https://langcog.github.io/wordbank-book/categories-syntactic.html) and ["Morphology, Grammar, and the Lexicon"](https://langcog.github.io/wordbank-book/grammar.html)
+-   [Bates & Goodman (1997), "On the inseparability of grammar and the lexicon"](https://crl.ucsd.edu/bates/papers/pdf/bates-goodman-1997.pdf)
+-   Frank et al. (2021), Chapter 13, ["Morphology, Grammar, and the Lexicon"](https://langcog.github.io/wordbank-book/grammar.html)
 
 Agenda:
 
@@ -86,7 +86,7 @@ Agenda:
 -   Discuss the role of online language processing in language learning
 -   Reproduce and extend results from [Swingley & Aslin (2002)](https://doi.org/10.1111%2F1467-9280.00485).
 
-We will devote five minutes at the end of class to talking about the group projects on Friday.
+We will devote ten minutes at the end of class to talking about the group projects on Friday. By the end of the day, please form a group and send me an email with the names of the people in your group and a paragraph about what you hope to do; I'll try to get you comments. 
 
 ### Day 5: Group projects
 
@@ -94,10 +94,17 @@ On the final day of the course, we will primarily be doing group projects. The g
 
 Groups will be 2 - 3 people (more makes it impossible to code together all looking at the same screen). 
 
-You are encouraged to come up with your own project idea, and I am happy to talk with students about how to use these resources to explore your own interests. Here are a few "starter ideas":
+You are encouraged to come up with your own project idea, and I am happy to talk with students about how to use these resources to explore your own interests. Here are a few "starter ideas".
 
-- Explore effects of maternal education on vocabulary growth (Wordbank)
-- Characterize the developmental trajectory of children's lexical diversity (e.g., MTLD) and how it differs by gender (CHILDES)
+Easier: 
+
 - Estimate the frequencies of color terms (or some other interesting set of words) in speech to children over age (CHILDES)
+- Explore cohort effects on vocabulary size using the `date_of_test` field (Wordbank)
+- Look at grammar/lexicon relationships within specific lexical subcategories, perhaps for languages beyond English (Wordbank)
+
+Harder: 
+
+- Explore effects of maternal education on the growth of vocabulary in different categories (Wordbank)
+- Characterize the developmental trajectory of children's lexical diversity (e.g., MTLD) and how it differs by gender (CHILDES)
 - Explore cross-linguistic linkages between CHILDES frequency and learning outcomes in either Wordbank or Peekbank
 
