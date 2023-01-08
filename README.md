@@ -15,6 +15,7 @@ Additional useful tools: familiarity with github for version control and the [ti
 ## Learning Goals
 
 -   Discuss the "standard model" framework for early word learning, focusing on input, processing, and uptake constructs,
+-   Compare different instruments and approaches for measuring child language,
 -   Learn a reproducible workflow for exploring language acquisition data in R, and
 -   Explore data from Wordbank, CHILDES, and Peekbank as a source of insights into language learning.
 

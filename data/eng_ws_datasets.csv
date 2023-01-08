@@ -1,0 +1,6 @@
+source_id,language,form,norming,longitudinal
+Marchman,English,WS,TRUE,FALSE
+Marchman Dallas,English,WS,FALSE,FALSE
+Smith,English,WS,FALSE,FALSE
+Byers,English,WS,FALSE,FALSE
+Thal,English,WS,FALSE,TRUE

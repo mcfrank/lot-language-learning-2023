@@ -1,0 +1,249 @@
+---
+title: 'Day 1: Tidyverse refresher'
+author: "Mike Frank"
+date: "2023-01-09"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+This is a quick tidyverse introduction/refresher, adapted for the LOT Language Learning course from Appendix C of [Experimentology](http://experimentology.io). The topics it covers are:
+
+- so-called "tidy" data
+- pipes (`%>%` and `|>`)
+- a few tidyverse verbs (`filter`, `mutate`, `summarise`, and `group_by`)
+- the barest bit of visualization using `ggplot`, and 
+- joining tidy data frames.
+
+I assume as a prerequisite that you already have some familiarity with R and am really just giving a refresher so everyone is on the same page. The best reference for this material is Hadley Wickham's [R for data scientists](http://r4ds.had.co.nz/) and I encourage you to read it if you are interested in learning more. 
+
+# Tidy data
+
+The basic data structure we're working with is the data frame, or `tibble` (in the `tidyverse` reimplementation). 
+Data frames have rows and columns, and each column has a distinct data type. The implementation in Python's `pandas` is distinct but most of the concepts are the same. 
+
+> “Tidy datasets are all alike, but every messy dataset is messy in its own way.” –– Hadley Wickham
+
+Here's the basic idea: In tidy data, every row is a single **observation** (trial), and every column describes a **variable** with some **value** describing that trial. 
+
+And if you know that data are formatted this way, then you can do amazing things, basically because you can take a uniform approach to the dataset. From R4DS:
+
+> There’s a general advantage to picking one consistent way of storing data. If you have a consistent data structure, it’s easier to learn the tools that work with it because they have an underlying uniformity. There’s a specific advantage to placing variables in columns because it allows R’s vectorised nature to shine.
+
+# Our dataset
+
+In this tutorial, we'll be using data from the English administrations of the MacArthur-Bates Communicative Develoment Inventory, as pulled from Wordbank. These are vocabulary checklist data from the "Words and Sentences" instrument, in which parents are asked 680 questions about the words their child produces. Right now we'll start with the summary data containing the number of words the parent checked, which gives us an esimate of the child's productive vocabulary. 
+
+Let's read in the data using the tidyverse `read_csv` command. 
+
+```{r}
+eng_ws <- read_csv("data/eng_ws_data.csv")
+head(eng_ws)
+```
+
+As you can see, these are tidy data: each row contains a `data_id` for that participant, their `age` in months, and their `production` score, as well as three demographic characteristics, `birth_order`, `ethnicity`, and `sex`. 
+
+# Functions and Pipes
+
+So how do we manipulate these data? 
+
+Everything you typically want to do in statistical programming uses **functions**. `mean` is a good example. `mean` takes one **argument**, a numeric vector. Let's take the mean production score in our data,
+
+```{r}
+mean(eng_ws$production)
+```
+
+We're going to call this **applying** the function `mean` to the variable `production` within the dataframe `eng_ws`.
+
+Pipes are a way to write strings of functions more easily. They bring the first argument of the function to the beginning. So you can write:
+
+```{r}
+eng_ws$production |>
+  mean()
+```
+
+The cool thing about pipes is that we can chain together many functions, applying them in sequence. That lets us read them out in the right order. 
+
+If we want to round the mean production score, we would normally have to write `round(mean(eng_ws$production))`. The computer evaluates this expression from the inside out, which can get tricky to read. With pipes, we can rewrite this expression as:
+
+```{r}
+eng_ws$production |>
+  mean() |>
+  round()
+```
+
+This reodering is easier to read out as a series of successive actions on data: "take `eng_ws$production`, take the mean, and then round it."
+
+You try it! 
+
+EXERCISE: rewrite this expression using a pipe chain. 
+
+```{r}
+# get the number of race/ethnicity groups in the data
+length(unique(eng_ws$ethnicity))
+
+# your version goes here:
+
+```
+
+# dplyr "verbs"
+
+Next, we are going to manipulate the data using "verbs" from `dplyr`. I'll only teach four verbs, the most common in my workflow (but there are many other useful ones):
+
++ `filter` - remove rows by some logical condition
++ `mutate` - create new columns 
++ `summarize` - apply some function over columns 
++ `group_by` - group the data into subsets by some column
+
+
+## `filter` 
+
+There are lots of reasons you might want to remove *rows* from your dataset, including getting rid of outliers, selecting subpopulations, etc. `filter` is a verb (function) that takes a data frame as its first argument, and then as its second takes the **condition** you want to filter on. 
+
+So if you wanted to look only at children who are between 16 and 30 months old (the "official" age range of the instrument, you could write:
+
+```{r}
+eng_ws %>%
+  filter(age >= 16, age <= 30)
+```
+
+We're using pipes with functions over data frames here. The way this works is that:
+
++ `dplyr` verbs always take the data frame as their first argument, and
++ because pipes pull out the first argument, the data frame just gets passed through successive operations
++ so you can read a pipe chain as "take this data frame and first do this, then do this, then do that."
+
+This is essentially the huge insight of `dplyr`: you can chain verbs into readable and efficient sequences of operations over dataframes, provided 1) the verbs all have the same syntax (which they do) and 2) the data all have the same structure (which they do if they are tidy). 
+
+Also notice that within dplyr verbs, you don't have to do that clunky `eng_ws$age` thing -- the verbs assume that variable names refer to the columns of the data frame.
+
+## `mutate`
+
+Perhaps more useful is *adding columns*. You might do this perhaps to compute some kind of derived variable. `mutate` is the verb for these situations - it allows you to add a column. Let's add an age group variable. 
+
+```{r}
+eng_ws |>
+  mutate(age_group = cut(age, c(12, 18,24,30,36)))
+```
+
+## `group_by` and `summarise`
+
+We typically describe datasets at the level of some grouping variable (e.g., subjects, age groups, etc.). We need two verbs to get a summary at a group level: `group_by` and `summarise` (kiwi spelling). Grouping alone doesn't do much.
+
+```{r}
+eng_ws %>%
+  group_by(age)  
+```
+
+All it does is add a grouping marker (look at the top of the data display above). 
+
+What `summarise` does is to *apply a function* to a part of the dataset to create a new summary dataset. So we can apply the function `mean` to the grouped dataset and get grouped means. Let's look at production scores by age. 
+
+```{r}
+## DO NOT DO THIS!!!
+# foo <- initialize_the_thing_being_bound()
+# for (i in 1:length(unique(eng_ws$age))) {
+#     this_data <- eng_ws[eng_ws$age == unique(eng_ws$age)[i],]
+#     do_a_thing(this_data)
+#     bind_together_somehow(this_data)
+# }
+
+eng_ws %>%
+  group_by(age) %>%
+  summarise(production = mean(production))
+```
+Note the syntax here: `summarise` takes multiple  `new_column_name = function_to_be_applied_to_data(data_column)` entries in a list. Using this syntax, we can create more elaborate summary datasets also. Here we use the `n()` function to get the number of rows in each group. 
+
+```{r}
+eng_ws_age <- eng_ws |>
+  group_by(age) |>
+  summarise(production = mean(production), 
+            n = n())
+
+```
+
+EXERCISE: You try it! Create a data frame containing mean production scores for each age and sex subgroup (e.g., for 18-month-old females). 
+
+```{r}
+# <- eng_ws_sex <- eng_ws |>
+#   ...
+```
+
+# Plotting
+
+These summary data are typically very useful for plotting. Here, we're going to use `ggplot` (part of the tidyverse) for plotting. There are whole books on ggpot, and I won't do it justice here. 
+
+The simplest ggplot command is constructed with three things:
+
+1. a data frame to plot
+2. an `aes` statement that maps individual variables in the data to particular aspects of the plot
+3. a `geom` that says what kinds of marks to put on the plot. 
+
+For example, let's plot our age summary data. 
+
+```{r}
+ggplot(eng_ws_age, 
+       aes(x = age, y = production)) + 
+  geom_point()
+```
+
+You can see that we've mapped `age` to the `x` coordinate, `production` to the `y` coordinate, and then we have instantiated this mapping with points (via `geom_point()`).
+
+Critically, we can layer on multiple geoms to make more sophisticated plots. Let's add some extra elements to this one. 
+
+```{r}
+ggplot(eng_ws_age, 
+       aes(x = age, y = production)) + 
+  geom_point() + 
+  geom_smooth()
+```
+
+EXERCISE: Plot the `eng_ws_sex` summary data frame you created, using color to represent the two different groups. 
+
+```{r}
+# ...
+```
+
+# Joining data frames
+
+The last topic we'll need to cover for the course is joining dataframes together. Often in experimental linguistics and psychology, we put all our data in a single flat table. But we'll see in the course that this approach breaks down when we need to work with larger datasets. 
+
+When datasets get larger, we typically want to work with the most compressed version of a particular kind of data. For example, when we have meta-data about datasets in Wordbank, we might not want to repeat that metadata on every row of the big participant data file. Instead, we might store it in a separate dataframe (called a "table" in database-speak). 
+
+Here's some simple meta-data about the different datasets.
+
+```{r}
+eng_ws_datasets <- read_csv("data/eng_ws_datasets.csv")
+head(eng_ws_datasets)
+```
+
+The key thing to notice is that both `eng_ws` and `eng_ws_datasets` have the column `source_id`. This identifier is unique for each row in `eng_ws_datasets`. So for each row in `eng_ws` we can "look up" information about the dataset source. 
+
+`join`s are a way to add this information to a data frame, by taking advantage of matching IDs across data frames. 
+
+There are lots of kinds of joins, but here we'll focus on `left_join`, which lets you take a target data frame `x` and add all matching info from `y`. 
+
+If we perform this join with `eng_ws` and `eng_ws_datasets`, we get all rows in `eng_ws` annotated with their information from `eng_ws_datasets`:
+
+```{r}
+left_join(eng_ws, eng_ws_datasets)
+```
+
+When you do a join, you always want to check how many rows there are in the respective tables. That's because if your IDs are not unique in the `y` dataframe, you will end up getting many repeats of each row. (This is a common problem). We'll be using joins frequently as we put together information from different datasets. 
+
+# Challenge problem
+
+If you got through all of this material and it was easy, try sprucing up the graph of vocabulary by age and sex. Try:
+
+- adding axis labels and ranges (`xlab`, `ylab`, `xlim`, `ylim`, etc)
+- making the points proportional to number of observations (`size` in the `aes` statement)
+- adding standard deviation error bars using `geom_pointrange` (this one will require modifying the dataframe to add SDs)
+
+```{r}
+# ...
+```
+
+
+Nice work!
