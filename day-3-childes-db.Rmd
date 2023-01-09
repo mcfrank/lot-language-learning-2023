@@ -1,0 +1,148 @@
+---
+title: 'Day 3: CHILDES and childes-db'
+author: "Mike Frank"
+date: "2023-01-10"
+output: html_document
+---
+
+In this Markdown, we'll dig into data from CHILDES using childes-db! To retrieve data, you'll need to use the `childesr` package, which is available from CRAN. 
+
+
+```{r eval=FALSE}
+# run this only once to install childesr
+install.packages("childesr")
+```
+```{r}
+library(childesr)
+library(tidyverse)
+```
+
+# Introducing `childesr`
+
+As with `wordbankr`, the majority of what is contained in the `childesr` package is `get_X` functions for getting the various tables in the database. 
+
+```{r}
+ls("package:childesr")
+```
+CHILDES is organized hierarchically into collections, which contain corpora, and each of these in turn contains individual transcript files. 
+
+Let's look at the available collections!
+
+```{r}
+get_collections()
+```
+
+And here are the available corpora:
+
+```{r}
+get_corpora()
+```
+
+As you can see, CHILDES is an impressive resource with a LOT of different data sources. These data sources an be quite idiosycratic. As an example, the "frogs" collection refers to transcripts of children telling "frog stories", narrating a wordless picture book, across different languages.
+
+Here, we will focus on looking at North American English corpora, contained in the "Eng-NA" collection. Where appropriate, `get_X` commands in `childesr` let you download subsets of data by specifying which collection and/or corpus you want to query (much like how `wordbankr` lets you specify a language and instrument). This keeps you from downloading lots of irrelevant data.  
+
+```{r}
+get_transcripts(collection = "Eng-NA")
+```
+
+We'll look at the famous Brown corpus (the one that started it all!). There are three children in this corpus. `get_transcripts` gives a list of files in this corpus, with the child's age and name. 
+
+```{r}
+get_transcripts(corpus = "Brown")
+```
+`get_participants` also will let you look at the children (and other adults) in the corpus. Note that many files have lots of people present. 
+
+```{r}
+get_participants(corpus = "Brown")
+```
+# childes-db: Tabular formats for language data
+
+You might not not think that tables are a good format for corpus data, but it turns out that the same things that make tidy data useful for other purposes make it useful for dealing with language. The key is that we maintain tables in `childesr` at several levels: full utterances, word types (along with frequency counts), and tokens (individual words). Let's look at each. 
+
+First, let's look at utterances. Note I've put an age restriction here, because otherwise this command would take a long time to run because we're essentially retrieving the entire Brown corpus!
+
+```{r}
+get_utterances(corpus = "Brown", age = c(24, 25), role = "target_child")
+```
+Sometimes we want whole utterances but sometimes we want to focus on specific words or groups of words. Let's look at the word type "dog", as spoken by the children in Brown. 
+
+```{r}
+get_types(corpus = "Brown", type = "dog", role = "target_child")
+```
+Here we have dog counts for each transcript in which the word was spoken (no zero counts returned). 
+
+Finally, let's get instances of "dog" (individual tokens) in Brown.
+
+```{r}
+get_tokens(corpus = "Brown", role = "target_child", token = "dog")
+```
+EXERCISE: You can also get variants on an individual word. Let's use this example to look at the development of the plural. We'll request singular and plural "dog" tokens by asking for dog as our stem. Of course, we'll also get some others. 
+
+```{r}
+dogs <- get_tokens(corpus = "Brown", role = "target_child", token = "*", stem = "dog")
+```
+Now let's look use our group-by/summarize workflow to try and understand when the plural of dog emerges relative to the singular for each child.  Make a tibble showing the first age at which the words "dog" and "dogs" are used for each child.
+
+Hint: `filter`, `group_by`, `summarise`!
+
+```{r}
+# dogs ->
+```
+
+
+# Computing speaker statistics
+
+Many users of CHILDES are interested in measures of syntactic development. One of the most famous of these is the "mean length of utterance" (MLU). MLU can be computed in either morphemes (traditional) or words (easier). 
+
+Another set of measures captures *lexical diversity*, the breadth of vocabulary that the child uses. In practice there are a number of measures, from the simple type:token ratio (which can be biased) to more complex ones like MTLD. 
+
+These statistics are computationally a little complicated, so they are cached in their own table, called `speaker_statistics`. 
+
+```{r}
+brown_stats <- get_speaker_statistics(corpus = "Brown", role = "target_child")
+brown_stats
+```
+
+EXERCISE: Using the speaker statistics table, plot MLU by child age, with color showing the different children. 
+
+```{r}
+# ggplot(brown_stats, ...)
+```
+
+
+# And/or counts
+
+In our final exercise, we'll replicate the general patterns of development for "and" and "or" found by Jasbi et al. (2022). 
+
+EXERCISE: use `get_tokens` to 1) get all instances of "and" and "or" spoken by either the child or the child's mother in the Brown corpus and 2) in a separate dataframe get ALL the tokens spoken by the child and the mother (you'll use this to normalize the counts so as to be able to compare transcripts of different sizes).
+
+```{r}
+and_or_tokens <- get_tokens(..)
+
+all_tokens <- get_tokens(...)
+```
+
+Now summarise the total number of tokens of each word for each speaker and transcript, and create normalized counts.
+
+```{r}
+and_or_counts <- and_or_tokens |>
+  # ...
+  
+all_token_counts <- all_tokens |>
+  # ...
+
+# now join and normalize and/or counts by total counts
+and_or_freqs <- left_join(...) 
+```
+
+Now let's plot the result:
+
+```{r}
+ggplot(and_or_freqs, aes(x = target_child_age, y = prop, col = speaker_role)) + 
+  geom_point() + 
+  geom_smooth() + 
+  facet_grid(gloss~target_child_name, scales = "free_y")
+```
+
+The pattern within children looks quite a lot like the pattern across children, especially for "and", though these three children don't lag quite as much on "or".
