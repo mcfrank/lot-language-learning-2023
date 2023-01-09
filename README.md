@@ -54,7 +54,7 @@ Agenda:
 
 -   Take an in-depth look at Wordbank and the use of CDI data
 -   Explore how to create reproducible pipelines with Wordbank data
--   Reproduce analyses on the composition of early vocabulary from Bates et al. (1994)
+-   Reproduce analyses on grammar/lexicon correspondences from Bates & Goodman (1997)
 
 ### Day 3: Accessing language input with CHILDES and childes-db
 
