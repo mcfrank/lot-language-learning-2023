@@ -21,7 +21,7 @@ I assume that you already have some familiarity with R. The best reference for t
 
 # Tidy data
 
-The basic data structure we're working with is the data frame, or `tibble` (in the `tidyverse` reimplementation). 
+The basic data structure we're working with is the data frame, or `tibble` (in the `tidyverse` re-implementation). 
 
 Data frames have rows and columns, and each column has a distinct data type. The implementation in Python's `pandas` is distinct but most of the concepts are the same. Tidy dataframes are a subset of data frames.
 
@@ -54,6 +54,7 @@ Everything you typically want to do in statistical programming uses **functions*
 
 ```{r}
 mean(eng_ws$production)
+nrow(eng_ws)
 ```
 
 We're going to call this **applying** the function `mean` to the variable `production` within the dataframe `eng_ws`.
@@ -86,17 +87,19 @@ EXERCISE: rewrite this expression using a pipe chain.
 length(unique(eng_ws$ethnicity))
 
 # your version goes here:
-
+eng_ws$ethnicity |>
+  unique() |>
+  length()
 ```
 
 # dplyr "verbs"
 
 Next, we are going to manipulate the data using "verbs" from `dplyr`. I'll only teach four verbs, the most common in my workflow (but there are many other useful ones):
 
-+ `filter` - remove rows by some logical condition
-+ `mutate` - create new columns 
-+ `summarize` - apply some function over columns 
-+ `group_by` - group the data into subsets by some column
+- `filter` - remove rows by some logical condition
+- `mutate` - create new columns 
+- `summarize` - apply some function over columns 
+- `group_by` - group the data into subsets by some column
 
 
 ## `filter` 
@@ -106,8 +109,8 @@ There are lots of reasons you might want to remove *rows* from your dataset, inc
 So if you wanted to look only at children who are between 16 and 30 months old (the "official" age range of the instrument, you could write:
 
 ```{r}
-eng_ws %>%
-  filter(age >= 16, age <= 30)
+eng_ws |>
+  filter(birth_order == "Second")
 ```
 
 We're using pipes with functions over data frames here. The way this works is that:
@@ -126,7 +129,7 @@ Also notice that within dplyr verbs, you don't have to do that clunky `eng_ws$ag
 
 ```{r}
 eng_ws |>
-  mutate(age_group = cut(age, c(12, 18,24,30,36)))
+  mutate(age_group = cut(age, c(12, 18, 24, 30, 36)))
 ```
 
 ## `group_by` and `summarise`
@@ -134,7 +137,7 @@ eng_ws |>
 We typically describe datasets at the level of some grouping variable (e.g., subjects, age groups, etc.). We need two verbs to get a summary at a group level: `group_by` and `summarise` (kiwi spelling). Grouping alone doesn't do much.
 
 ```{r}
-eng_ws %>%
+eng_ws |>
   group_by(age)  
 ```
 
@@ -148,11 +151,11 @@ What `summarise` does is to *apply a function* to a part of the dataset to creat
 # for (i in 1:length(unique(eng_ws$age))) {
 #     this_data <- eng_ws[eng_ws$age == unique(eng_ws$age)[i],]
 #     do_a_thing(this_data)
-#     bind_together_somehow(this_data)
+#     foo <- bind_together_somehow(this_data)
 # }
 
-eng_ws %>%
-  group_by(age) %>%
+eng_ws |>
+  group_by(age) |>
   summarise(production = mean(production))
 ```
 Note the syntax here: `summarise` takes multiple  `new_column_name = function_to_be_applied_to_data(data_column)` entries in a list. Using this syntax, we can create more elaborate summary datasets also. Here we use the `n()` function to get the number of rows in each group. 
@@ -163,18 +166,21 @@ eng_ws_age <- eng_ws |>
   summarise(production = mean(production), 
             n = n())
 
+eng_ws_age
 ```
 
 EXERCISE: You try it! Create a data frame containing mean production scores for each age and sex subgroup (e.g., for 18-month-old females). 
 
 ```{r}
-# <- eng_ws_sex <- eng_ws |>
-#   ...
+eng_ws_sex <- eng_ws |>
+  group_by(age, sex) |>
+   summarise(production = mean(production), 
+            n = n())
 ```
 
 # Plotting
 
-These summary data are typically very useful for plotting. Here, we're going to use `ggplot` (part of the tidyverse) for plotting. There are whole books on ggpot, and I won't do it justice here. 
+These summary data are typically very useful for plotting. Here, we're going to use `ggplot` (part of the tidyverse) for plotting. There are whole books on ggplot, and I won't do it justice here. 
 
 The simplest ggplot command is constructed with three things:
 
@@ -245,6 +251,5 @@ If you got through all of this material and it was easy, try sprucing up the gra
 ```{r}
 # ...
 ```
-
 
 Nice work!
