@@ -19,7 +19,6 @@ library(tidyverse)
 library(wordbankr)
 ```
 
-
 # What's in `wordbankr`?
 
 The first thing we can do is look into what is available in the package. 
@@ -98,7 +97,7 @@ items_eng_ws |> distinct(item_kind)
 ```
 What's more, within the words, there are a whole bunch of different categories of word (marked this way on the form to make it easier for parents to think about different words). 
 
-```{r, rows.print=25}
+```{r}
 items_eng_ws |> filter(item_kind == "word") |> distinct(category)
 ```
 
