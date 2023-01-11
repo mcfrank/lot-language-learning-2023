@@ -100,11 +100,12 @@ Easier:
 
 - Estimate the frequencies of color terms (or some other interesting set of words) in speech to children over age (CHILDES)
 - Explore cohort effects on vocabulary size using the `date_of_test` field (Wordbank)
-- Look at grammar/lexicon relationships within specific lexical subcategories, perhaps for languages beyond English (Wordbank)
+- Look at grammar/lexicon relationships within specific lexical subcategories, perhaps for languages beyond English (Wordbank) - this was the challenge problem for Day 3
 
 Harder: 
 
 - Explore effects of maternal education on the growth of vocabulary in different categories (Wordbank)
 - Characterize the developmental trajectory of children's lexical diversity (e.g., MTLD) and how it differs by gender (CHILDES)
-- Explore cross-linguistic linkages between CHILDES frequency and learning outcomes in either Wordbank or Peekbank
+- Measure whether there are sex differences in vocabulary variability (MADM)
+- Check on the presence of a noun bias in the new ASL CDI 
 
