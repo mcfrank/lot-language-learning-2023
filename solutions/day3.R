@@ -1,3 +1,5 @@
+# day 3 solutions
+
 # dog exercise
 dogs |>
   filter(gloss %in% c("dog","dogs")) |>

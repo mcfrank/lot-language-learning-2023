@@ -87,9 +87,6 @@ EXERCISE: rewrite this expression using a pipe chain.
 length(unique(eng_ws$ethnicity))
 
 # your version goes here:
-eng_ws$ethnicity |>
-  unique() |>
-  length()
 ```
 
 # dplyr "verbs"
@@ -172,10 +169,7 @@ eng_ws_age
 EXERCISE: You try it! Create a data frame containing mean production scores for each age and sex subgroup (e.g., for 18-month-old females). 
 
 ```{r}
-eng_ws_sex <- eng_ws |>
-  group_by(age, sex) |>
-   summarise(production = mean(production), 
-            n = n())
+# eng_ws_sex <- eng_ws |> ...
 ```
 
 # Plotting

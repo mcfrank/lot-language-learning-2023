@@ -59,14 +59,7 @@ admins_eng_ws |>
 EXERCISE: Try choosing another instrument in a different language and pulling data from it, then examining the age distribution.
 
 ```{r}
-admins_russian_ws <- get_administration_data(language = "Russian", 
-                                         form = "WS", 
-                                         include_demographic_info = TRUE)
-admins_russian_ws |> 
-  count(age)
-
-admins_danish_ws <- get_administration_data(language = "Danish", 
-                                         form = "WS")
+# ...
 ```
 
 # Visualizing Wordbank data
@@ -86,19 +79,7 @@ EXERCISE: let's redo our analysis from yesterday but using data straight from wo
 Hint: start by pasting the code from yesterday.
 
 ```{r}
-lang <- "French (Quebecois)"
-admins_ws <- get_administration_data(language = lang, 
-                                     form = "WS", 
-                                     include_demographic_info = TRUE)
-
-data_summary <- admins_ws |>
-  group_by(age, sex) |>
-  summarise(production = mean(production), 
-            n = n())
-
-ggplot(data_summary, aes(x = age, y = production, col = sex)) + 
-  geom_point(aes(size = n)) + 
-  geom_smooth()
+# ...
 ```
 
 # Digging into item-level data
@@ -198,16 +179,13 @@ Hint: `data_id` indicates a unique child.
 
 ```{r}
 # complete this pipe chain:
-complexity_means <- complexity_instrument_data |>
-  group_by(data_id) |>
-  summarise(complexity_score = sum(value == "complex"))
 ```
 
 EXERCISE: now join `complexity_means` and `admins_eng_ws` to create a single dataframe.
 
 ```{r}
 # complete this command:
-admins_eng_ws <- left_join(admins_eng_ws, complexity_means)
+# admins_eng_ws <- left_join(...)
 ```
 
 Now we can plot the relationship described by Bates and Goodman!

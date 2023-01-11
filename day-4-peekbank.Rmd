@@ -1,0 +1,164 @@
+---
+title: 'Day 3: CHILDES and childes-db'
+author: "Mike Frank"
+date: "2023-01-10"
+output: html_document
+---
+
+In this Markdown, we'll dig into data from [Peekbank](http://peekbank.stanford.edu) using `peekbankr`! 
+
+
+```{r eval=FALSE}
+# run this only once to install childesr
+install.packages("remotes")
+remotes::install_github("langcog/peekbankr")
+```
+```{r}
+library(peekbankr)
+library(tidyverse)
+```
+
+# Introducing `peekbankr`
+
+As with `wordbankr` and `childesr`, the majority of what is contained in the `peekbankr` package is `get_X` functions for getting the various tables in the database. 
+
+```{r}
+ls("package:peekbankr")
+```
+Again, we'll overview each relevant table. First, the datasets in Peekbank:
+
+```{r}
+get_datasets()
+```
+Now, because we want to have records of both individual children (subjects) and sessions (administrations), we have a table for each. This allows longitudinal tracking of subjects. 
+
+```{r}
+get_subjects()
+```
+and
+
+```{r}
+get_administrations()
+```
+We also will need information about the particular stimuli that are shown in a study:
+
+```{r}
+get_stimuli()
+```
+The main eye-tracking time-series are stored in two tables: `aoi_timepoints` and `xy_timepoints`. AOIs refer to areas of interest and these time series just show whether a child is looking at hte target or the distractor. In contrast, XY timepoints show the actual XY position on the monitor. For the purposes of this tutorial, we won't use the XY timepoints. 
+
+```{r}
+aoi_timepoints <- get_aoi_timepoints(dataset_name = "swingley_aslin_2002")
+aoi_timepoints
+```
+There are several important features of this time series: it is normalized to 40 Hz (25ms samples) to make math easier and it has 0 as the "point of disambiguation" (the key noun, typically). 
+
+# Digging into Swingley & Aslin's data
+
+We are going to use the Swingley & Aslin (2002) paper as our working example throughout, since working with the full Peekbank daaset is going to be quite annoying computationally. 
+
+We begin by retrieving the relevant tables from the database. We already have AOI timepoints, so let's get `administrations`, `trial_types`, and `trials`.
+
+```{r}
+administrations <- get_administrations(dataset_name = "swingley_aslin_2002")
+trial_types <- get_trial_types(dataset_name = "swingley_aslin_2002")
+trials <- get_trials(dataset_name = "swingley_aslin_2002")
+```
+
+Let's look at our participants in this experiment:
+
+```{r}
+ggplot(administrations, aes(x = age)) + 
+  geom_histogram(binwidth = 1) 
+```
+So this experiment is 50 participants, mostly all 15 month olds but also a few 14 and 16 month olds. 
+
+And here are the different trials. There are two conditions: `cp` (correct) and `m-h` (mispronounced). The `lab_trial_id` field gives the overall layout of a trial: for example in the second trial, which is a mispronunciation trial, the child heard "opple" and there was an apple and a ball present on the screen. 
+
+```{r}
+trial_types
+```
+
+In practice, we want a SINGLE dataframe with all the information in it. We should be able to join these very easily since they all have matching IDs.
+
+```{r}
+swingley_data <- aoi_timepoints |>
+  left_join(administrations) |>
+  left_join(trials) |>
+  left_join(trial_types) 
+```
+
+We are also going to do a little cleanup to make sure the conditions are labeled right.
+
+```{r}
+swingley_data <- swingley_data |>
+  filter(condition != "filler") |>
+  mutate(condition = if_else(condition == "cp", "Correct", "Mispronounced"))
+```
+
+OK, so now we can look at the data:
+
+```{r}
+swingley_data
+```
+
+# Visualization
+
+We'll start with a simple graph of one condition. 
+
+```{r}
+correct_accuracy <- swingley_data |>
+  filter(condition == "Correct") |>
+  group_by(t_norm) |>
+  summarise(correct = sum(aoi == "target") / 
+              sum(aoi %in% c("target","distractor")))
+
+correct_accuracy
+```
+
+EXERCISE: plot these data!
+
+```{r}
+# ...
+```
+
+
+# Full reproducibility
+
+Let's use the code from the paper now to create a full reproduction of the Swingley & Aslin results. Note here we summarize *within* participants, then we aggregate again *across* participants. The second time we compute our confidence intervals so that we can get confidence intervals over the mean based on our sample of participants (not based on the number of trials). 
+
+```{r}
+by_subject_accuracies <- swingley_data  |>
+  group_by(condition, t_norm, administration_id) |> 
+  summarize(correct = sum(aoi == "target") / 
+              sum(aoi %in% c("target","distractor"))) 
+
+mean_accuracies <- by_subject_accuracies |>
+  group_by(condition, t_norm) |> 
+  summarize(mean_correct = mean(correct),
+            ci = 1.96 * sd(correct) / sqrt(n()))
+```
+
+Now we can plot! Note the extra styling elements that make this plot prettier. :)
+
+```{r}
+ggplot(mean_accuracies, 
+       aes(x = t_norm, y = mean_correct, color = condition)) +
+  geom_hline(yintercept = .5, lty = 2, col = "black") +
+  geom_vline(xintercept = 0, lty = 3, col = "black") +
+  geom_pointrange(aes(ymin = mean_correct - ci,
+                      ymax = mean_correct + ci),
+                  position = position_dodge(width = 10)) +
+  ylab("Proportion looking at correct image") +
+  xlab("Time from target word onset (msec)") +
+  theme_bw() +
+  langcog::scale_color_solarized(name = "Condition") +
+  theme(legend.position = "bottom") +
+  coord_cartesian(xlim = c(-500,3000), ylim = c(0.4,0.8))
+```
+
+EXERCISE: compute the average accuracy for both conditions within the 500ms - 3000ms window.
+
+```{r}
+# mean_accuracies |> 
+```
