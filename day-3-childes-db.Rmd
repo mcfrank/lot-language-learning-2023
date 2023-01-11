@@ -38,7 +38,7 @@ And here are the available corpora:
 get_corpora()
 ```
 
-As you can see, CHILDES is an impressive resource with a LOT of different data sources. These data sources an be quite idiosycratic. As an example, the "frogs" collection refers to transcripts of children telling "frog stories", narrating a wordless picture book, across different languages.
+As you can see, CHILDES is an impressive resource with a LOT of different data sources. These data sources an be quite idiosyncratic. As an example, the "frogs" collection refers to transcripts of children telling "frog stories", narrating a wordless picture book, across different languages.
 
 Here, we will focus on looking at North American English corpora, contained in the "Eng-NA" collection. Where appropriate, `get_X` commands in `childesr` let you download subsets of data by specifying which collection and/or corpus you want to query (much like how `wordbankr` lets you specify a language and instrument). This keeps you from downloading lots of irrelevant data.  
 
