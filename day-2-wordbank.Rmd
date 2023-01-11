@@ -42,7 +42,9 @@ The next main data types we might want from Wordbank are `administration_data` a
 Let's start by recreating our analysis from yesterday, now pulling data live from Wordbank. 
 
 ```{r}
-admins_eng_ws <- get_administration_data(language = "English (American)", form = "WS")
+admins_eng_ws <- get_administration_data(language = "English (American)", 
+                                         form = "WS", 
+                                         include_demographic_info = TRUE)
 head(admins_eng_ws)
 n_distinct(admins_eng_ws$data_id)
 ```
@@ -57,7 +59,14 @@ admins_eng_ws |>
 EXERCISE: Try choosing another instrument in a different language and pulling data from it, then examining the age distribution.
 
 ```{r}
-# ...
+admins_russian_ws <- get_administration_data(language = "Russian", 
+                                         form = "WS", 
+                                         include_demographic_info = TRUE)
+admins_russian_ws |> 
+  count(age)
+
+admins_danish_ws <- get_administration_data(language = "Danish", 
+                                         form = "WS")
 ```
 
 # Visualizing Wordbank data
@@ -65,8 +74,9 @@ EXERCISE: Try choosing another instrument in a different language and pulling da
 Now we can make our canonical plot of the variability of individual children's vocabularies. Note that we are using `geom_jitter`, which jitters points around so they don't all end up on top of one another. The arguments to the function (`alpha` and `size`) make the points smaller and semi-transparent, so they all can be seen on one plot. 
 
 ```{r}
-ggplot(admins_eng_ws, aes(x = age, y = production)) +
-  geom_jitter(alpha = .1, size = 0.5, width = .3, height = 0) +
+ggplot(admins_danish_ws, aes(x = age, y = production)) +
+  geom_jitter(alpha = .1, width = .3, height = 0) +
+  # geom_point(alpha = .1) +
   geom_smooth()
 ```
 
@@ -76,7 +86,19 @@ EXERCISE: let's redo our analysis from yesterday but using data straight from wo
 Hint: start by pasting the code from yesterday.
 
 ```{r}
-# ...
+lang <- "French (Quebecois)"
+admins_ws <- get_administration_data(language = lang, 
+                                     form = "WS", 
+                                     include_demographic_info = TRUE)
+
+data_summary <- admins_ws |>
+  group_by(age, sex) |>
+  summarise(production = mean(production), 
+            n = n())
+
+ggplot(data_summary, aes(x = age, y = production, col = sex)) + 
+  geom_point(aes(size = n)) + 
+  geom_smooth()
 ```
 
 # Digging into item-level data
@@ -98,13 +120,17 @@ items_eng_ws |> distinct(item_kind)
 What's more, within the words, there are a whole bunch of different categories of word (marked this way on the form to make it easier for parents to think about different words). 
 
 ```{r}
-items_eng_ws |> filter(item_kind == "word") |> distinct(category)
+items_eng_ws |> 
+  filter(item_kind == "word") |> 
+  distinct(category)
 ```
 
 There are also some "protosyntactic" categories, created following Bates et al. (1994), who further grouped the categories above into nouns, predicates (verbs and adjectives), function words, and others. 
 
 ```{r}
-items_eng_ws |> filter(item_kind == "word") |> distinct(lexical_category)
+items_eng_ws |> 
+  filter(item_kind == "word") |> 
+  distinct(lexical_category)
 ```
 
 Note that all of this sectioning is specific to the English forms. Most other forms follow most of these decisions, but there are many significant deviations from them based on what various form developers wanted at the time and/or felt was appropriate for their language. 
@@ -117,7 +143,9 @@ The main issue with doing this is that the raw data are very large. So we won't 
 
 
 ```{r}
-dog_cat_items <- items_eng_ws |> filter(item_definition %in% c("dog", "cat"))
+dog_cat_items <- items_eng_ws |> 
+  filter(item_definition %in% c("dog", "cat"))
+
 dog_cat_data <- get_instrument_data(language = "English (American)", 
                                     form = "WS", 
                                     items = dog_cat_items$item_id, 
@@ -128,17 +156,18 @@ head(dog_cat_data)
 Now we can aggregate and plot these data. (We'll have to join in the children's ages). Check out this slightly more complex pipe chain where we do a join, and then a group and then a summarise!
 
 ```{r}
-dog_cat_means <- dog_cat_data |>
+dog_cat_data |>
   left_join(admins_eng_ws) |>
-  group_by(age, item_definition) |>
-  summarise(produces = mean(produces, na.rm=TRUE))
+  filter(!is.na(sex)) |>
+  group_by(age, sex, item_definition) |>
+  summarise(produces = mean(produces, na.rm=TRUE)) ->
+  dog_cat_means 
 
-ggplot(dog_cat_means, aes(x = age, y = produces, col = item_definition)) +
+ggplot(dog_cat_means, aes(x = age, y = produces, col = sex)) +
   geom_point() + 
-  geom_smooth() 
+  geom_smooth() +
+  facet_wrap(~item_definition)
 ```
-
-
 # Replicating Bates & Goodman (1997)
 
 Now we have everything we need to replicate Bates and Goodman's observed correlation between grammar and the lexicon. 
@@ -149,6 +178,7 @@ First, get the complexity items.
 complexity_items <- filter(items_eng_ws, item_kind == "complexity") 
 head(complexity_items)
 ```
+
 Next get the instrument data for these specific items (note that we are using `item_id` to select only the complexity items), for all children. This is a lot of data! 
 
 ```{r}
@@ -168,21 +198,23 @@ Hint: `data_id` indicates a unique child.
 
 ```{r}
 # complete this pipe chain:
-# complexity_means <- complexity_instrument_data |>
-#   ...
+complexity_means <- complexity_instrument_data |>
+  group_by(data_id) |>
+  summarise(complexity_score = sum(value == "complex"))
 ```
 
 EXERCISE: now join `complexity_means` and `admins_eng_ws` to create a single dataframe.
 
 ```{r}
 # complete this command:
-# admins_eng_ws <- ...
+admins_eng_ws <- left_join(admins_eng_ws, complexity_means)
 ```
 
 Now we can plot the relationship described by Bates and Goodman!
 
 ```{r}
-ggplot(admins_eng_ws, aes(x = production, y = complexity_score)) + 
+ggplot(admins_eng_ws, 
+       aes(x = production, y = complexity_score)) + 
   geom_jitter(alpha = .1, size = .5, width = 0, height = .3) + 
   geom_smooth()
 ```
